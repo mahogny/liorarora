@@ -1,0 +1,16 @@
+name,tissue,cell,isko
+Rora cKO-Skin-MC-Treg-Replicate1,skin,MC,TRUE
+Rora cKO-Skin-MC-Treg-Replicate2,skin,MC,TRUE
+Rora cKO-Skin-MC-Treg-Replicate3,skin,MC,TRUE
+Rora cKO-Skin-Treg-Replicate1,skin,Treg,TRUE
+Rora cKO-Skin-Treg-Replicate2,skin,Treg,TRUE
+Rora cKO-Skin-Treg-Replicate3,skin,Treg,TRUE
+WT-LN-Treg-Replicate1,LN,Treg,FALSE
+WT-LN-Treg-Replicate2,LN,Treg,FALSE
+WT-LN-Treg-Replicate3,LN,Treg,FALSE
+WT-Skin-MC-Treg-Replicate1,skin,MC,FALSE
+WT-Skin-MC-Treg-Replicate2,skin,MC,FALSE
+WT-Skin-MC-Treg-Replicate3,skin,MC,FALSE
+WT-Skin-Treg-Replicate1,skin,Treg,FALSE
+WT-Skin-Treg-Replicate2,skin,Treg,FALSE
+WT-Skin-Treg-Replicate3,skin,Treg,FALSE

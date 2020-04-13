@@ -1,0 +1,46 @@
+File,sample,count_cd4,count_foxp3,tissue,cell,replicate
+01-mln-C2.fcs,mln_CD4 only_m1,29194,0,mln,CD4 only,m1
+01-mln-C3.fcs,mln_CD4 only_m2,202913,0,mln,CD4 only,m2
+01-mln-C4.fcs,mln_CD4 only_m3,8132,0,mln,CD4 only,m3
+01-mln-C5.fcs,mln_CD4 only_m4,23925,0,mln,CD4 only,m4
+01-mln-C6.fcs,mln_CD4 only_m5,29194,1,mln,CD4 only,m5
+01-mln-D2.fcs,mln_CD4+wtTregs_m1,39449,2921,mln,CD4+wtTregs,m1
+01-mln-D3.fcs,mln_CD4+wtTregs_m2,59029,855,mln,CD4+wtTregs,m2
+01-mln-D4.fcs,mln_CD4+wtTregs_m3,26014,681,mln,CD4+wtTregs,m3
+01-mln-D5.fcs,mln_CD4+wtTregs_m4,59620,1799,mln,CD4+wtTregs,m4
+01-mln-D6.fcs,mln_CD4+wtTregs_m5,120202,1059,mln,CD4+wtTregs,m5
+01-mln-E2.fcs,mln_CD4+KOTregs_m1,24180,781,mln,CD4+KOTregs,m1
+01-mln-E3.fcs,mln_CD4+KOTregs_m2,40043,640,mln,CD4+KOTregs,m2
+01-mln-E4.fcs,mln_CD4+KOTregs_m3,31868,1193,mln,CD4+KOTregs,m3
+01-mln-E5.fcs,mln_CD4+KOTregs_m4,10289,633,mln,CD4+KOTregs,m4
+01-mln-E6.fcs,mln_CD4+KOTregs_m5,63514,1535,mln,CD4+KOTregs,m5
+02-IG-C7.fcs,IG_CD4 only_m1,17799,0,IG,CD4 only,m1
+02-IG-C8.fcs,IG_CD4 only_m2,26226,0,IG,CD4 only,m2
+02-IG-C9.fcs,IG_CD4 only_m3,25803,0,IG,CD4 only,m3
+02-IG-C10.fcs,IG_CD4 only_m4,38723,0,IG,CD4 only,m4
+02-IG-C11.fcs,IG_CD4 only_m5,2538,0,IG,CD4 only,m5
+02-IG-D7.fcs,IG_CD4+wtTregs_m1,516,41,IG,CD4+wtTregs,m1
+02-IG-D8.fcs,IG_CD4+wtTregs_m2,2483,234,IG,CD4+wtTregs,m2
+02-IG-D9.fcs,IG_CD4+wtTregs_m3,280,110,IG,CD4+wtTregs,m3
+02-IG-D10.fcs,IG_CD4+wtTregs_m4,1307,307,IG,CD4+wtTregs,m4
+02-IG-D11.fcs,IG_CD4+wtTregs_m5,1109,184,IG,CD4+wtTregs,m5
+02-IG-E7.fcs,IG_CD4+KOTregs_m1,571,207,IG,CD4+KOTregs,m1
+02-IG-E8.fcs,IG_CD4+KOTregs_m2,853,52,IG,CD4+KOTregs,m2
+02-IG-E9.fcs,IG_CD4+KOTregs_m3,747,543,IG,CD4+KOTregs,m3
+02-IG-E10.fcs,IG_CD4+KOTregs_m4,263,160,IG,CD4+KOTregs,m4
+02-IG-E11.fcs,IG_CD4+KOTregs_m5,337,186,IG,CD4+KOTregs,m5
+03-spl-C1.fcs,spl_CD4 only_m1,21701,2,spl,CD4 only,m1
+03-spl-C2.fcs,spl_CD4 only_m2,133634,0,spl,CD4 only,m2
+03-spl-C3.fcs,spl_CD4 only_m3,18813,0,spl,CD4 only,m3
+03-spl-C4.fcs,spl_CD4 only_m4,10450,0,spl,CD4 only,m4
+03-spl-C5.fcs,spl_CD4 only_m5,8123,0,spl,CD4 only,m5
+03-spl-B1.fcs,spl_CD4+wtTregs_m1,18501,3222,spl,CD4+wtTregs,m1
+03-spl-B2.fcs,spl_CD4+wtTregs_m2,13751,1099,spl,CD4+wtTregs,m2
+03-spl-B3.fcs,spl_CD4+wtTregs_m3,13045,1917,spl,CD4+wtTregs,m3
+03-spl-B4.fcs,spl_CD4+wtTregs_m4,12276,1262,spl,CD4+wtTregs,m4
+03-spl-B5.fcs,spl_CD4+wtTregs_m5,31436,2113,spl,CD4+wtTregs,m5
+03-spl-A1.fcs,spl_CD4+KOTregs_m1,14116,2960,spl,CD4+KOTregs,m1
+03-spl-A2.fcs,spl_CD4+KOTregs_m2,15026,324,spl,CD4+KOTregs,m2
+03-spl-A3.fcs,spl_CD4+KOTregs_m3,13438,3414,spl,CD4+KOTregs,m3
+03-spl-A4.fcs,spl_CD4+KOTregs_m4,3485,1274,spl,CD4+KOTregs,m4
+03-spl-A5.fcs,spl_CD4+KOTregs_m5,40109,2834,spl,CD4+KOTregs,m5

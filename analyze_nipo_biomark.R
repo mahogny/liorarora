@@ -1,5 +1,6 @@
+library(stringr)
 library(rARPACK)
-library(rgl)
+# library(rgl)
 #library(plot3D)
 library(scatterplot3d)
 library(roots)
@@ -105,7 +106,7 @@ seed(0)
 gene_cutoff<-list()
 for(c in colnames(tblsorted)){
   #mean(normalmixEM(log10(as.double(tblsorted[,"RORA"])))$mu)
-  gene_cutoff[[c]] <- 10^mean(normalmixEM(log10(as.double(tblsorted[,c])))$mu)
+  gene_cutoff[[c]] <- 10^( 1/2 * mean(normalmixEM(log10(as.double(tblsorted[,c])))$mu)  )
 #  v <- log10(as.double(tblsorted[,c]))
 #  gene_cutoff[[c]] <- 10^(min(v)*0.1 + max(v)*0.9)
 }
@@ -116,6 +117,7 @@ gene_cutoff$CD3E
 ### loose cutoffs 
 ###CD4 <- subset(CD3_4proP, CD3_4proP[,"CD4"] > -9 | CD3_4proP[,"CD3E"] > -9)
 
+hist(log10(tblsorted[,"RORA"]),xlab = "Log10(Rora)")
 
 ############################################################################################
 ######################### get subsets ######################################################
@@ -127,14 +129,24 @@ gene_cutoff$CD3E
 cellcondition <- data.frame(isgood=rep(TRUE,nrow(tblsorted)))
 cellcondition$isTcell <- FALSE
 cellcondition$isTcell[c(grep("ac_",rownames(tblsorted)), grep("nv_",rownames(tblsorted)))] <- TRUE
-cellcondition$isCD4 <- cellcondition$isTcell & (tblsorted[,"CD4"] > -9 | tblsorted[,"CD3E"] > -9)
 
+###### Assign tissue
 cellcondition$isGut <- FALSE
 cellcondition$isGut[grep("g_",rownames(tblsorted))] <- TRUE
 cellcondition$isLung <- FALSE
 cellcondition$isLung[grep("l_",rownames(tblsorted))] <- TRUE
 cellcondition$isME <- FALSE
 cellcondition$isME[grep("me",rownames(tblsorted))] <- TRUE
+cellcondition$isMED <- FALSE
+cellcondition$isMED[grep("med",rownames(tblsorted))] <- TRUE
+cellcondition$isMES <- FALSE
+cellcondition$isMES[grep("mes",rownames(tblsorted))] <- TRUE
+
+cellcondition$tissue <- ""
+cellcondition$tissue[cellcondition$isMES]  <- "mesLN"
+cellcondition$tissue[cellcondition$isMED]  <- "medLN"
+cellcondition$tissue[cellcondition$isLung] <- "lung"
+cellcondition$tissue[cellcondition$isGut]  <- "gut"
 
 cellcondition$highRora <- FALSE
 cellcondition$highRora <- as.double(tblsorted[,"RORA"])> gene_cutoff$RORA
@@ -146,7 +158,17 @@ cellcondition$highIl13 <- as.double(tblsorted[,"IL13"])> gene_cutoff$IL13
 cellcondition$highSell <- FALSE
 cellcondition$highSell <- as.double(tblsorted[,"SELL"])> 10^3
 
+#### Assign day
+cellcondition$day <- -1
+cellcondition$day[grep("D0_",rownames(tblsorted))] <- 0
+cellcondition$day[grep("D03",rownames(tblsorted))] <- 3
+cellcondition$day[grep("D05",rownames(tblsorted))] <- 5
+cellcondition$day[grep("D07",rownames(tblsorted))] <- 7
+cellcondition$day[grep("D10",rownames(tblsorted))] <- 10
 
+#cellcondition$isCD4 <- cellcondition$isTcell & (tblsorted[,"CD4"] > -9 | tblsorted[,"CD3E"] > -9)
+cellcondition$isCD4 <- cellcondition$isTcell & 
+  (tblsorted[,"CD4"] > gene_cutoff["CD4"] | tblsorted[,"CD3E"] > gene_cutoff["CD3E"])
 
 cellcondition$highCytokine <- cellcondition$highIl4 | cellcondition$highIl13
 
@@ -181,6 +203,250 @@ mean(as.double(tblsorted[
   "RORA"])> gene_cutoff$RORA)   #83%
 
 #cellcondition$highCytokine
+
+
+############################################################################################
+######################### Gene exp heatmap for paper #######################################
+############################################################################################
+
+
+heatmap_markers_cyto <- str_to_upper(c("Ifng", "Il4", "Il13", "Il5", "Il6", "Il10", "Il17a"))
+heatmap_markers <- str_to_upper(c(
+  "Rora", "Gata3","Tbx21", "Foxp3", "Pparg",
+  "Cd44", "Sell", "Icos",
+  "Cxcr6", "Ccr2", "Cxcr5", "Il1rl1" ##bonus
+  ))   
+
+col_mesLN  <- "#0000FF"
+col_medLN  <- "#5555FF"
+col_lung   <- "#BB0000"
+col_gut    <- "#FF5555"
+col_spleen <- "yellow"  #additional
+#col_medLN  <- "#8888FF"
+#col_gut    <- "yellow"
+
+celltypecol <- rep("black", ncol(tblsorted))
+celltypecol[cellcondition$isGut]  <- col_gut
+celltypecol[cellcondition$isLung] <- col_lung
+celltypecol[cellcondition$isMES]  <- col_mesLN
+celltypecol[cellcondition$isMED]  <- col_medLN
+
+s <- tblsorted
+for(i in 1:ncol(s)){
+  s[,i] <- 0+(s[,i] >  1e-4)  #gene_cutoff[[colnames(s)[i]]])
+}
+usecell <-  cellcondition$isCD4 & apply(s,1,sum)<50  #!cellcondition$highSell &
+scyto <- (apply(s[,heatmap_markers_cyto],1,sum)>0)+0
+
+s <- data.frame(s[,heatmap_markers], Cytokines=scyto)
+#s <- s[usecell,c("Cytokine",heatmap_markers)]
+colnames(s) <- str_to_title(colnames(s))  
+
+so <- s[usecell,]
+so_order <- order(so$Rora, so$Gata3, so$Foxp3, so$Tbx21, so$Pparg, so$Cd44, so$Sell,
+                  so$Icos, so$Cxcr6, so$Ccr2, so$Cxcr5, so$Il1rl1, so$Cytokines)
+so <- so[so_order,]
+# so <- so[order(celltypecol[usecell],so$Rora, so$Gata3, so$Foxp3, so$Tbx21, so$Pparg, so$Cd44, so$Sell,
+#                so$Icos, so$Cxcr6, so$Ccr2, so$Cxcr5, so$Il1rl1, so$Cytokines),]
+
+
+pdf("out.nipobiomark/heatmap.pdf",h=4)  ####### need to reimport!!
+heatmap.2(
+  t(so), 
+  col=c("#CCCCCC","red"),
+  rowsep = 1:ncol(s),
+  trace = "none",
+  scale="none",
+  Rowv = FALSE,
+  Colv = FALSE,
+  cexRow = 1.5,
+  ColSideColors = celltypecol[usecell][so_order],  #modified . celltypecol is wrong!
+  dendrogram = "none",
+  labCol = FALSE)
+dev.off()
+
+
+getmatrix_daytissue <- function(genename="Rora", usecell=rep(TRUE, nrow(s)),
+                                checktissue=c("mesLN","medLN","gut","lung"),
+                                checkday=c(3,5,7), getcount=FALSE){
+  out <- matrix(nrow=length(checktissue), ncol=length(checkday))
+  for(curtis in 1:length(checktissue)){
+    for(curday in 1:length(checkday)){
+      v <- cellcondition$tissue==checktissue[curtis] & cellcondition$day==checkday[curday] & usecell
+      #v <- v[usecell]
+      if(getcount){
+        #num cells to check
+        out[curtis,curday] <- sum(v) 
+      } else {
+        #fraction of cells expressing
+        out[curtis,curday] <- mean(s[v, genename])  
+      }
+#      print(sprintf("%s   %s   %s", checktissue[curtis], checkday[curday],  out[curtis,curday]))
+    }
+  }
+  colnames(out) <- sprintf("d%s",checkday)
+  rownames(out) <- c("Lung","Gut","MedLN","MesLN")
+  out
+}
+
+plotonegenescatter_daytissue <- function(genename="Rora", usecell=rep(TRUE, nrow(s)), fcex=2.5,
+                                         checktissue=c("mesLN","medLN","gut","lung"),
+                                         checkday=c(3,5,7)){
+
+  #Restrict to tissues and times  
+  usecell <- usecell & 
+    cellcondition$tissue %in% checktissue & 
+    cellcondition$day    %in% checkday
+  
+  #s[cellcondition$tissue=="medLN" & cellcondition$day==5,"Sell"]
+  
+  #Calculate percentages
+  out <- getmatrix_daytissue(genename, usecell=usecell)
+  cnt <- getmatrix_daytissue(genename, usecell=usecell, getcount = TRUE)
+  
+  print(out)
+  print(cnt)
+  
+  #Calculate XY positions
+  set.seed(0)
+  cellx <- rep(-1, nrow(s))
+  celly <- rep(-1, nrow(s))
+  for(curtis in 1:length(checktissue)){
+    for(curday in 1:length(checkday)){
+      v <- cellcondition$tissue==checktissue[curtis] & cellcondition$day==checkday[curday]
+      cellx[which(v)] <- curday + runif(n=sum(v),min = 0.1, max=0.9) - 1
+      celly[which(v)] <- curtis + runif(n=sum(v),min = 0.1, max=0.9) - 1
+    }
+  }
+
+  #Make the grid
+  plot(x=c(0,0),y=c(0,0),type="l",xlim=c(-2,6), ylim=c(-2,6), axes = FALSE)
+  for(i in 0:nrow(out)){
+    lines(x=c(0,ncol(out)),y=c(i,i),type="l")
+  }
+  for(i in 0:ncol(out)){
+    lines(x=c(i,i),y=c(0,nrow(out)),type="l")
+  }
+
+  #Gene name label
+  text(x=-1,y=nrow(out)+1, labels=genename, cex=fcex*1.5)
+  
+  #Axis labels
+  text(x=-0.8,y=(1:nrow(out))-0.5,labels=rownames(out),cex=fcex)
+  text(x=(1:ncol(out))-0.5,y=nrow(out)+0.3,labels=colnames(out),cex=fcex)
+  
+  #Percentages to the right
+  text(x=ncol(out)+0.5, y=1:nrow(out)-0.5,cex=fcex, 
+       labels=sprintf("%s%%",round(100*apply(out,1,mean))))
+  #print(apply(out,1,mean))
+  
+  #Percentages beneath
+  text(y=-0.3, x=1:ncol(out)-0.5,cex=fcex, 
+       labels=sprintf("%s%%",round(100*apply(out,2,mean))))
+  #print(apply(out,2,mean))
+  
+  #Assign colors to points
+  pp <- usecell  #cellx>=0 & 
+  thecol <- s[,genename]
+ # print(thecol)
+  thecol[thecol==0] <- "gray"
+  thecol[thecol==1] <- "red"
+#  print(thecol)
+
+  points(x=cellx[pp], y=celly[pp], pch=19, col=thecol[pp])
+}
+
+
+#getmatrix_daytissue("Sell")
+plotonegenescatter_daytissue("Sell")
+
+#Make multiple XY plots. Reuse XY for consistency
+plotmultiscattergenes <- function(genestoplot=c("Rora","Sell","Gata3","Tbx21","Foxp3","Cytokines")){
+  usecell <- rep(TRUE, nrow(s))
+  usecell <- s$Rora==1
+  #usecell <- s$Sell==1
+  pdf("out.nipobiomark/gene_timespace.pdf",w=length(genestoplot)*7)
+  par(mfrow=c(1,length(genestoplot)))
+  for(g in genestoplot){
+    print(g)
+    plotonegenescatter_daytissue(g, usecell = usecell)
+  }
+  dev.off()
+}
+plotmultiscattergenes()
+
+
+
+############################################################################################
+######################### overlap between rora and other genes #############################
+############################################################################################
+
+b <- tblsorted[cellcondition$isCD4,]
+b <- data.frame(
+  Rora =b[,"RORA" ] > gene_cutoff$RORA,
+  Sell=b[,"SELL"] > gene_cutoff$SELL
+)
+table(b$Rora[!b$Sell])  ##61/(94+61)
+vc <- vennCounts(b)
+
+
+
+b <- tblsorted[!cellcondition$highSell & cellcondition$isCD4,]
+b <- data.frame(
+  Gata3=b[,"GATA3"] > gene_cutoff$GATA3,
+  Rora =b[,"RORA" ] > gene_cutoff$RORA,
+  Foxp3=b[,"FOXP3"] > gene_cutoff$FOXP3,
+)
+vc <- vennCounts(b)
+vennDiagram(vc)#,cex=c(1.5,1.5,1.5))
+
+
+### Calculate p-value of rora & gata3 overlap being by random chance. Fisher test
+fisher.test(b$Gata3, b$Rora)  #0.0003884
+fisher.test(b$Foxp3, b$Rora)  #0.0001945
+
+
+#only consider active... sell low!
+
+hist(log10(1+as.double(tblsorted[
+  cellcondition$isCD4 & cellcondition$highCytokine,
+  "SELL"])))
+
+mean(as.double(tblsorted[
+  cellcondition$isCD4 & cellcondition$highCytokine,
+  "RORA"])> gene_cutoff$RORA)   #83%
+
+
+
+cor.rora  <- sort(decreasing = TRUE,cor(tblsorted,method = "spearman")["RORA",])
+cor.gata3 <- sort(decreasing = TRUE,cor(tblsorted,method = "spearman")["GATA3",])
+cor.foxp3 <- sort(decreasing = TRUE,cor(tblsorted,method = "spearman")["FOXP3",])
+
+#b <- 
+#apply(tblsorted,1,sum)
+
+#cor.rora
+
+b <- tblsorted[
+  cellcondition$isCD4 & cellcondition$isTcell & cellcondition$isgood,
+  union(union(names(cor.gata3[1:5]),names(cor.foxp3[1:5])),names(cor.rora[1:10]))]
+for(i in 1:ncol(b)){
+  b[,i] <- b[,i]>gene_cutoff[[colnames(b)[i]]] #  /max(b[,i])
+}
+#b <- log10(1+b)
+#b <- b[apply(b,1,sum)>3,]  #I think this is a bit cheating
+
+sort(apply(b,1,sum))
+
+
+plot.new()
+heatmap.2(
+  b, 
+  labRow = FALSE,
+  trace="none",
+  dendrogram="none") 
+#heatmap.2(b)
+
 
 ############################################################################################
 ######################### diffusion map ####################################################
@@ -233,9 +499,11 @@ diffMapFlor <- function(data, ndims = 4, nn=0.2, sigma=12, removeFirst = TRUE) {
 }
 
 
-data <- tblsorted[cellcondition$isCD4,]
+data <- tblsorted
+data <- tblsorted[cellcondition$isCD4,]  #not converging
 #data <- CD4                         #TODO is this the right set to use?
 d <- diffMapFlor(data,ndims=3)
+#d <- diffMapFlor(data,ndims=2)
 
 
 #rc <- rep("brown",nrow(CD4set))
@@ -251,7 +519,7 @@ d <- diffMapFlor(data,ndims=3)
 #rgl.postscript("out/diffmap_1.eps")
 #rgl.postscript("out/diffmap_1.pdf","pdf")
 
-dodiffplot <- function(fname, main, rc){
+dodiffplot3 <- function(fname, main, rc){
   #pdf(fname)
   scatterplot3d(
     x=-d$vectors[,3], 
@@ -266,6 +534,22 @@ dodiffplot <- function(fname, main, rc){
     main=main, pch=3, color = rc)   #pch3
   #dev.off()
 }
+
+dodiffplot <- function(fname, main, rc){
+  #pdf(fname)
+  plot(
+    x=-d$vectors[,1], 
+    y=d$vectors[,2], 
+    axis = TRUE,
+    xlab="", ylab="",zlab="",
+    #    xlab="PC 1", ylab="PC 2",zlab="PC 3",
+    cex.symbols = 3,
+    cex.lab = 1,
+    cex.axis = 1,
+    main=main, pch=3, color = rc)   #pch3
+  #dev.off()
+}
+
 
 dodiffplotgene <- function(gene, col="brown", cutoff=-5){
   rc <- rep(col,nrow(data))
@@ -290,67 +574,9 @@ dodiffplot("out.biomark/diffmap_subset_me.pdf", "Lung+gut vs LN", rc)
 dev.off()
 
 
-############################################################################################
-######################### overlap between rora and other genes #############################
-############################################################################################
-
-b <- tblsorted[!cellcondition$highSell & cellcondition$isCD4,]
-b <- data.frame(
-  Gata3=b[,"GATA3"] > gene_cutoff$GATA3,
-  Rora =b[,"RORA"]  > gene_cutoff$RORA,
-  Foxp3=b[,"FOXP3"] > gene_cutoff$FOXP3
-)
-vc <- vennCounts(b)
-vennDiagram(vc)#,cex=c(1.5,1.5,1.5))
-
-
-
-#only consider active... sell low!
-
-hist(log10(1+as.double(tblsorted[
-  cellcondition$isCD4 & cellcondition$highCytokine,
-  "SELL"])))
-
-mean(as.double(tblsorted[
-  cellcondition$isCD4 & cellcondition$highCytokine,
-  "RORA"])> gene_cutoff$RORA)   #83%
-
-
-
-cor.rora  <- sort(decreasing = TRUE,cor(tblsorted,method = "spearman")["RORA",])
-cor.gata3 <- sort(decreasing = TRUE,cor(tblsorted,method = "spearman")["GATA3",])
-cor.foxp3 <- sort(decreasing = TRUE,cor(tblsorted,method = "spearman")["FOXP3",])
-
-#b <- 
-#apply(tblsorted,1,sum)
-
-#cor.rora
-
-b <- tblsorted[
-  cellcondition$isCD4 & cellcondition$isTcell & cellcondition$isgood,
-  union(union(names(cor.gata3[1:5]),names(cor.foxp3[1:5])),names(cor.rora[1:10]))]
-for(i in 1:ncol(b)){
-  b[,i] <- b[,i]>gene_cutoff[[colnames(b)[i]]] #  /max(b[,i])
-}
-#b <- log10(1+b)
-#b <- b[apply(b,1,sum)>3,]  #I think this is a bit cheating
-
-sort(apply(b,1,sum))
-
-
-plot.new()
-heatmap.2(
-  b, 
-  labRow = FALSE,
-  trace="none",
-  dendrogram="none") 
-#heatmap.2(b)
-
-#listrefgene
-
 
 ############################################################################################
-######################### another approach at clustering ##########################################
+######################### another approach at clustering ###################################
 ############################################################################################
 
 
